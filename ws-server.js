@@ -120,7 +120,8 @@ fastify.get('/media-stream', { websocket: true }, async (connection, req) => {
   });
 });
 
-fastify.listen({ port: 5050 }, (err, address) => {
-  if (err) throw err;
-  console.log(`Donna voice server listening at ${address}`);
-});
+const PORT = process.env.PORT || 5050;
+
+fastify.listen({ port: PORT, host: '0.0.0.0' }, (err, address) => {
+
+
