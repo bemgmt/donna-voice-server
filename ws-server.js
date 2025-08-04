@@ -83,41 +83,41 @@ async function forwardToolCall(toolCall) {
 // WebSocket endpoint
 fastify.get('/media-stream', { websocket: true }, (connection, req) => {
   const client = connection.socket;
-  const openai = await startOpenAISession();
 
-  console.log('[Twilio] Connection started');
+  (async () => {
+    const openai = await startOpenAISession();
+    console.log('[Twilio] Connection started');
 
-  client.on('message', async (message) => {
-    try {
-      const msg = JSON.parse(message.toString());
-      if (msg.event === 'media') {
-        // This is audio — stream to OpenAI
-        openai.send(JSON.stringify({ audio: msg.media.payload }));
+    client.on('message', async (message) => {
+      try {
+        const msg = JSON.parse(message.toString());
+        if (msg.event === 'media') {
+          openai.send(JSON.stringify({ audio: msg.media.payload }));
+        }
+      } catch (err) {
+        console.error('Bad message from Twilio:', err.message);
       }
-    } catch (err) {
-      console.error('Bad message from Twilio:', err.message);
-    }
-  });
+    });
 
-  openai.on('message', async (msg) => {
-    const parsed = JSON.parse(msg);
+    openai.on('message', async (msg) => {
+      const parsed = JSON.parse(msg);
 
-    if (parsed.content) {
-      console.log('[OpenAI] Response:', parsed.content);
+      if (parsed.content) {
+        console.log('[OpenAI] Response:', parsed.content);
 
-      // Speak back via ElevenLabs
-      const audioStream = await synthesizeElevenLabs(parsed.content);
-      audioStream.on('data', (chunk) => {
-        client.send(chunk);
-      });
-    }
-
-    if (parsed.tool_calls) {
-      for (const call of parsed.tool_calls) {
-        await forwardToolCall(call);
+        const audioStream = await synthesizeElevenLabs(parsed.content);
+        audioStream.on('data', (chunk) => {
+          client.send(chunk);
+        });
       }
-    }
-  });
+
+      if (parsed.tool_calls) {
+        for (const call of parsed.tool_calls) {
+          await forwardToolCall(call);
+        }
+      }
+    });
+  })();
 });
 
 const PORT = process.env.PORT || 5050;
@@ -129,4 +129,5 @@ fastify.listen({ port: PORT, host: '0.0.0.0' }, (err, address) => {
   }
   console.log(`Donna voice server listening at ${address}`);
 });
+
 
