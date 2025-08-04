@@ -123,5 +123,9 @@ fastify.get('/media-stream', { websocket: true }, async (connection, req) => {
 const PORT = process.env.PORT || 5050;
 
 fastify.listen({ port: PORT, host: '0.0.0.0' }, (err, address) => {
-
-
+  if (err) {
+    console.error(err);
+    process.exit(1);
+  }
+  console.log(`Donna voice server listening at ${address}`);
+});
