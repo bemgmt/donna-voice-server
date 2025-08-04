@@ -81,7 +81,7 @@ async function forwardToolCall(toolCall) {
 }
 
 // WebSocket endpoint
-fastify.get('/media-stream', { websocket: true }, async (connection, req) => {
+fastify.get('/media-stream', { websocket: true }, (connection, req) => {
   const client = connection.socket;
   const openai = await startOpenAISession();
 
@@ -129,3 +129,4 @@ fastify.listen({ port: PORT, host: '0.0.0.0' }, (err, address) => {
   }
   console.log(`Donna voice server listening at ${address}`);
 });
+
